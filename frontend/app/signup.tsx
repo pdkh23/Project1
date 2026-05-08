@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
   View,
   Text,
@@ -12,63 +12,55 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { Bell } from '../src/icons';
+import { ArrowLeft } from '../src/icons';
 import { colors, radius, spacing, shadows } from '../src/theme';
 import { api } from '../src/api';
-import { loadUser, saveUser } from '../src/auth';
+import { saveUser } from '../src/auth';
 
-export default function LoginScreen() {
+export default function SignupScreen() {
   const router = useRouter();
+  const [displayName, setDisplayName] = useState('');
   const [userId, setUserId] = useState('');
   const [storeCode, setStoreCode] = useState('');
+  const [confirmCode, setConfirmCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [bootstrapping, setBootstrapping] = useState(true);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const u = await loadUser();
-        if (u) {
-          router.replace('/home');
-          return;
-        }
-      } catch {}
-      setBootstrapping(false);
-    })();
-  }, []);
-
-  const onLogin = async () => {
+  const onSignup = async () => {
     setError(null);
-    if (!userId.trim() || !storeCode.trim()) {
-      setError('Please enter both User ID and Store Code.');
+    const uid = userId.trim();
+    const code = storeCode.trim();
+    const confirm = confirmCode.trim();
+    const name = displayName.trim();
+
+    if (!uid || !code || !confirm) {
+      setError('Please fill in User ID, Store Code and Confirm Code.');
       return;
     }
+    if (uid.length < 3) {
+      setError('User ID must be at least 3 characters.');
+      return;
+    }
+    if (code.length < 4) {
+      setError('Store Code must be at least 4 characters.');
+      return;
+    }
+    if (code !== confirm) {
+      setError('Store Codes do not match.');
+      return;
+    }
+
     setLoading(true);
     try {
-      const user = await api.login(userId.trim(), storeCode.trim());
+      const user = await api.register(uid, code, name || undefined);
       await saveUser(user);
       router.replace('/home');
     } catch (e: any) {
-      setError(e?.message || 'Login failed. Please try again.');
+      setError(e?.message || 'Sign up failed. Please try again.');
     } finally {
       setLoading(false);
     }
   };
-
-  const useDemo = () => {
-    setUserId('BRS');
-    setStoreCode('1001');
-    setError(null);
-  };
-
-  if (bootstrapping) {
-    return (
-      <View style={styles.center}>
-        <ActivityIndicator color={colors.primary} />
-      </View>
-    );
-  }
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
@@ -76,32 +68,52 @@ export default function LoginScreen() {
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
+        <View style={styles.header}>
+          <TouchableOpacity
+            testID="back-button"
+            style={styles.iconBtn}
+            onPress={() => router.back()}
+          >
+            <ArrowLeft color={colors.textMain} size={20} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Create Account</Text>
+          <View style={{ width: 44 }} />
+        </View>
+
         <ScrollView
           contentContainerStyle={styles.inner}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.brandWrap}>
-            <View style={styles.brandIcon} testID="brand-icon">
-              <Bell color={colors.primary} size={28} strokeWidth={2.2} />
-            </View>
-            <Text style={styles.brand}>BRS</Text>
-            <Text style={styles.tagline}>Reminder & Order Tracker</Text>
+          <View style={styles.intro}>
+            <Text style={styles.title}>Set up your store</Text>
+            <Text style={styles.subtitle}>
+              Pick a unique User ID and a Store Code you'll remember. You'll use these to sign in
+              later.
+            </Text>
           </View>
 
           <View style={styles.card}>
-            <Text style={styles.title}>Welcome</Text>
-            <Text style={styles.subtitle}>Sign in to your store account</Text>
-
             {error && (
-              <View style={styles.errorBox} testID="login-error">
+              <View style={styles.errorBox} testID="signup-error">
                 <Text style={styles.errorText}>{error}</Text>
               </View>
             )}
 
-            <Text style={styles.label}>User ID</Text>
+            <Text style={styles.label}>Display Name <Text style={styles.optional}>(optional)</Text></Text>
             <TextInput
-              testID="login-userid-input"
+              testID="signup-name-input"
+              style={styles.input}
+              value={displayName}
+              onChangeText={setDisplayName}
+              placeholder="e.g. My Electronics Store"
+              placeholderTextColor={colors.textMuted}
+              autoCorrect={false}
+            />
+
+            <Text style={[styles.label, { marginTop: spacing.md }]}>User ID</Text>
+            <TextInput
+              testID="signup-userid-input"
               style={styles.input}
               value={userId}
               onChangeText={(t) => {
@@ -110,14 +122,13 @@ export default function LoginScreen() {
               }}
               autoCapitalize="characters"
               autoCorrect={false}
-              placeholder="e.g. BRS"
+              placeholder="3+ characters, e.g. STORE7"
               placeholderTextColor={colors.textMuted}
-              returnKeyType="next"
             />
 
             <Text style={[styles.label, { marginTop: spacing.md }]}>Store Code</Text>
             <TextInput
-              testID="login-storecode-input"
+              testID="signup-storecode-input"
               style={styles.input}
               value={storeCode}
               onChangeText={(t) => {
@@ -126,42 +137,47 @@ export default function LoginScreen() {
               }}
               autoCapitalize="none"
               autoCorrect={false}
-              placeholder="e.g. 1001"
+              placeholder="4+ characters"
               placeholderTextColor={colors.textMuted}
+              secureTextEntry
+            />
+
+            <Text style={[styles.label, { marginTop: spacing.md }]}>Confirm Store Code</Text>
+            <TextInput
+              testID="signup-confirm-input"
+              style={styles.input}
+              value={confirmCode}
+              onChangeText={(t) => {
+                setConfirmCode(t);
+                if (error) setError(null);
+              }}
+              autoCapitalize="none"
+              autoCorrect={false}
+              placeholder="Re-enter store code"
+              placeholderTextColor={colors.textMuted}
+              secureTextEntry
               returnKeyType="go"
-              onSubmitEditing={onLogin}
+              onSubmitEditing={onSignup}
             />
 
             <TouchableOpacity
-              testID="login-submit-button"
+              testID="signup-submit-button"
               style={[styles.button, loading && { opacity: 0.7 }]}
-              onPress={onLogin}
+              onPress={onSignup}
               disabled={loading}
               activeOpacity={0.85}
             >
               {loading ? (
                 <ActivityIndicator color={colors.textInverse} />
               ) : (
-                <Text style={styles.buttonText}>Sign In</Text>
+                <Text style={styles.buttonText}>Create Account</Text>
               )}
             </TouchableOpacity>
 
-            <TouchableOpacity
-              testID="use-demo-button"
-              style={styles.demoBtn}
-              onPress={useDemo}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.demoBtnText}>Use demo credentials (BRS / 1001)</Text>
-            </TouchableOpacity>
-
             <View style={styles.footerRow}>
-              <Text style={styles.footerText}>Don't have an account? </Text>
-              <TouchableOpacity
-                testID="goto-signup"
-                onPress={() => router.push('/signup')}
-              >
-                <Text style={styles.footerLink}>Create one</Text>
+              <Text style={styles.footerText}>Already have an account? </Text>
+              <TouchableOpacity onPress={() => router.replace('/')} testID="goto-login">
+                <Text style={styles.footerLink}>Sign In</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -173,46 +189,35 @@ export default function LoginScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
-  center: {
-    flex: 1,
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.md,
+  },
+  headerTitle: {
+    fontFamily: 'Outfit_700Bold',
+    fontSize: 22,
+    color: colors.textMain,
+  },
+  iconBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   inner: {
     flexGrow: 1,
     paddingHorizontal: spacing.lg,
-    justifyContent: 'center',
-    paddingVertical: spacing.xl,
+    paddingBottom: spacing.xl,
   },
-  brandWrap: { alignItems: 'center', marginBottom: spacing.xl },
-  brandIcon: {
-    width: 64,
-    height: 64,
-    borderRadius: 20,
-    backgroundColor: '#E8F0F9',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.md,
-  },
-  brand: {
-    fontFamily: 'Outfit_700Bold',
-    fontSize: 36,
-    color: colors.primary,
-    letterSpacing: -1,
-  },
-  tagline: {
-    fontFamily: 'PlusJakartaSans_400Regular',
-    fontSize: 14,
-    color: colors.textMuted,
-    marginTop: 4,
-  },
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.card,
-    padding: spacing.lg,
-    ...shadows.card,
-  },
+  intro: { marginBottom: spacing.lg, marginTop: spacing.sm },
   title: {
     fontFamily: 'Outfit_700Bold',
     fontSize: 28,
@@ -222,8 +227,14 @@ const styles = StyleSheet.create({
     fontFamily: 'PlusJakartaSans_400Regular',
     fontSize: 15,
     color: colors.textMuted,
-    marginTop: 4,
-    marginBottom: spacing.lg,
+    marginTop: 6,
+    lineHeight: 22,
+  },
+  card: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.card,
+    padding: spacing.lg,
+    ...shadows.card,
   },
   errorBox: {
     backgroundColor: '#FEF2F2',
@@ -243,6 +254,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.textMain,
     marginBottom: 8,
+  },
+  optional: {
+    fontFamily: 'PlusJakartaSans_400Regular',
+    color: colors.textMuted,
+    fontSize: 12,
   },
   input: {
     height: 52,
@@ -268,24 +284,11 @@ const styles = StyleSheet.create({
     fontFamily: 'Outfit_600SemiBold',
     fontSize: 17,
   },
-  demoBtn: {
-    marginTop: spacing.md,
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  demoBtnText: {
-    color: colors.primary,
-    fontFamily: 'PlusJakartaSans_600SemiBold',
-    fontSize: 14,
-  },
   footerRow: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: spacing.md,
-    paddingTop: spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
   },
   footerText: {
     fontFamily: 'PlusJakartaSans_400Regular',

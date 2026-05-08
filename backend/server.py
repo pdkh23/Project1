@@ -36,6 +36,12 @@ class LoginRequest(BaseModel):
     store_code: str
 
 
+class RegisterRequest(BaseModel):
+    user_id: str
+    store_code: str
+    display_name: Optional[str] = None
+
+
 class LoginResponse(BaseModel):
     id: str
     user_id: str
@@ -90,6 +96,35 @@ async def login(payload: LoginRequest):
     if not user:
         raise HTTPException(status_code=401, detail="Invalid User ID or Store Code")
     return LoginResponse(**user)
+
+
+@api_router.post("/auth/register", response_model=LoginResponse)
+async def register(payload: RegisterRequest):
+    uid = payload.user_id.strip()
+    code = payload.store_code.strip()
+    display = (payload.display_name or uid).strip()
+
+    if len(uid) < 3:
+        raise HTTPException(status_code=400, detail="User ID must be at least 3 characters")
+    if len(code) < 4:
+        raise HTTPException(status_code=400, detail="Store Code must be at least 4 characters")
+    if not display:
+        display = uid
+
+    existing = await db.users.find_one(
+        {"user_id": {"$regex": f"^{uid}$", "$options": "i"}}
+    )
+    if existing:
+        raise HTTPException(status_code=409, detail="User ID already taken. Please choose another.")
+
+    user = User(user_id=uid, store_code=code, display_name=display)
+    await db.users.insert_one(user.model_dump())
+    return LoginResponse(
+        id=user.id,
+        user_id=user.user_id,
+        store_code=user.store_code,
+        display_name=user.display_name,
+    )
 
 
 @api_router.post("/clients", response_model=Client)

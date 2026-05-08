@@ -40,6 +40,11 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ user_id, store_code }),
     }),
+  register: (user_id: string, store_code: string, display_name?: string) =>
+    request<User>('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({ user_id, store_code, display_name }),
+    }),
   listClients: (owner_user_id: string, q?: string) => {
     const params = new URLSearchParams({ owner_user_id });
     if (q) params.append('q', q);

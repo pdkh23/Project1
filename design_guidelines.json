@@ -1,0 +1,77 @@
+{
+  "theme": "Light",
+  "archetype": "Archetype 1 (Organic & Earthy) blended with Archetype 4 (Swiss/Clean Business)",
+  "colors": {
+    "primary": "#0E3A60",
+    "primaryHover": "#0A2944",
+    "secondary": "#FDB813",
+    "background": "#F7F9FC",
+    "surface": "#FFFFFF",
+    "text": {
+      "main": "#061224",
+      "muted": "#5C6A7B",
+      "inverse": "#FFFFFF"
+    },
+    "borders": "#E2E8F0",
+    "status": {
+      "danger": "#EF4444",
+      "success": "#10B981"
+    }
+  },
+  "typography": {
+    "fontFamily": {
+      "heading": "Outfit",
+      "body": "Plus Jakarta Sans"
+    },
+    "scale": {
+      "h1": "text-4xl leading-tight tracking-tight font-bold",
+      "h2": "text-3xl leading-snug tracking-tight font-semibold",
+      "h3": "text-2xl leading-snug font-semibold",
+      "bodyLarge": "text-lg leading-relaxed",
+      "body": "text-base leading-relaxed",
+      "small": "text-sm leading-normal tracking-wide text-muted"
+    }
+  },
+  "spacing_and_layout": {
+    "padding": {
+      "screen": "p-6 sm:p-8",
+      "card": "p-6",
+      "button": "py-4 px-6",
+      "input": "p-4"
+    },
+    "borderRadius": {
+      "card": "rounded-[20px]",
+      "button": "rounded-[16px]",
+      "input": "rounded-[12px]",
+      "badge": "rounded-full"
+    },
+    "shadows": {
+      "card": "shadow-[0_8px_32px_rgba(14,58,96,0.06)]"
+    }
+  },
+  "components": {
+    "Header": {
+      "description": "Large typography, bold 'BRS' branding, solid surface with no glassmorphism to keep it clean. Generous whitespace around the header."
+    },
+    "Cards": {
+      "description": "Big, padded (24px+), white surface with rounded-[20px]. Big Feather/Lucide icons. Subtle shadow. Clear visual hierarchy."
+    },
+    "Buttons": {
+      "description": "Deep Blue background, rounded-[16px], large text (text-lg), full width on mobile."
+    },
+    "Inputs": {
+      "description": "Large touch targets, rounded-[12px], subtle border, generous padding (16px)."
+    },
+    "Badges": {
+      "description": "Warm yellow background, bold text, used to highlight numbers like 'upcoming installations'."
+    }
+  },
+  "image_urls": [],
+  "instructions_to_main_agent": [
+    "Use React Native Expo and expo-router for the app architecture.",
+    "Implement 'Outfit' and 'Plus Jakarta Sans' using @expo-google-fonts.",
+    "Use lucide-react-native for all icons.",
+    "Add 'data-testid' to all interactive elements, e.g., 'data-testid=\"login-button\"'.",
+    "Focus on modern minimalism: generously spaced layout, clear typography hierarchy, and a strict color palette."
+  ]
+}

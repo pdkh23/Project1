@@ -18,7 +18,10 @@ import { api } from '../src/api';
 import { loadUser } from '../src/auth';
 import { Dropdown } from '../src/Dropdown';
 
-const PROVIDERS = ['Virgin', 'Bell'];
+const PROVIDERS: { name: string; color: string }[] = [
+  { name: 'Virgin', color: '#E2231A' }, // Virgin red
+  { name: 'Bell', color: '#1E73BE' },   // Bell blue
+];
 
 const MONTHS = [
   { label: 'January', value: '01' },
@@ -216,17 +219,29 @@ export default function NewEntryScreen() {
             <Text style={[styles.label, styles.spacer]}>Provider</Text>
             <View style={styles.chipsRow}>
               {PROVIDERS.map((p) => {
-                const active = provider === p;
+                const active = provider === p.name;
                 return (
                   <TouchableOpacity
-                    key={p}
-                    testID={`entry-provider-${p.toLowerCase()}`}
-                    style={[styles.chip, active && styles.chipActive]}
-                    onPress={() => setProvider(active ? '' : p)}
+                    key={p.name}
+                    testID={`entry-provider-${p.name.toLowerCase()}`}
+                    style={[
+                      styles.chip,
+                      active && {
+                        backgroundColor: p.color,
+                        borderColor: p.color,
+                      },
+                    ]}
+                    onPress={() => setProvider(active ? '' : p.name)}
                     activeOpacity={0.85}
                   >
-                    <Text style={[styles.chipText, active && styles.chipTextActive]}>
-                      {p}
+                    <Text
+                      style={[
+                        styles.chipText,
+                        !active && { color: p.color },
+                        active && styles.chipTextActive,
+                      ]}
+                    >
+                      {p.name}
                     </Text>
                   </TouchableOpacity>
                 );

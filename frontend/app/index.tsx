@@ -8,7 +8,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
-  Alert,
+  ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -22,22 +22,26 @@ export default function LoginScreen() {
   const [userId, setUserId] = useState('');
   const [storeCode, setStoreCode] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [bootstrapping, setBootstrapping] = useState(true);
 
   useEffect(() => {
     (async () => {
-      const u = await loadUser();
-      if (u) {
-        router.replace('/home');
-      } else {
-        setBootstrapping(false);
-      }
+      try {
+        const u = await loadUser();
+        if (u) {
+          router.replace('/home');
+          return;
+        }
+      } catch {}
+      setBootstrapping(false);
     })();
   }, []);
 
   const onLogin = async () => {
+    setError(null);
     if (!userId.trim() || !storeCode.trim()) {
-      Alert.alert('Missing info', 'Please enter both User ID and Store Code.');
+      setError('Please enter both User ID and Store Code.');
       return;
     }
     setLoading(true);
@@ -46,10 +50,16 @@ export default function LoginScreen() {
       await saveUser(user);
       router.replace('/home');
     } catch (e: any) {
-      Alert.alert('Login failed', e.message || 'Please try again.');
+      setError(e?.message || 'Login failed. Please try again.');
     } finally {
       setLoading(false);
     }
+  };
+
+  const useDemo = () => {
+    setUserId('BRS');
+    setStoreCode('1001');
+    setError(null);
   };
 
   if (bootstrapping) {
@@ -66,7 +76,11 @@ export default function LoginScreen() {
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        <View style={styles.inner}>
+        <ScrollView
+          contentContainerStyle={styles.inner}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
           <View style={styles.brandWrap}>
             <View style={styles.brandIcon} testID="brand-icon">
               <Bell color={colors.primary} size={28} strokeWidth={2.2} />
@@ -79,16 +93,26 @@ export default function LoginScreen() {
             <Text style={styles.title}>Welcome</Text>
             <Text style={styles.subtitle}>Sign in to your store account</Text>
 
+            {error && (
+              <View style={styles.errorBox} testID="login-error">
+                <Text style={styles.errorText}>{error}</Text>
+              </View>
+            )}
+
             <Text style={styles.label}>User ID</Text>
             <TextInput
               testID="login-userid-input"
               style={styles.input}
               value={userId}
-              onChangeText={setUserId}
+              onChangeText={(t) => {
+                setUserId(t);
+                if (error) setError(null);
+              }}
               autoCapitalize="characters"
               autoCorrect={false}
               placeholder="e.g. BRS"
               placeholderTextColor={colors.textMuted}
+              returnKeyType="next"
             />
 
             <Text style={[styles.label, { marginTop: spacing.md }]}>Store Code</Text>
@@ -96,12 +120,16 @@ export default function LoginScreen() {
               testID="login-storecode-input"
               style={styles.input}
               value={storeCode}
-              onChangeText={setStoreCode}
+              onChangeText={(t) => {
+                setStoreCode(t);
+                if (error) setError(null);
+              }}
               autoCapitalize="none"
               autoCorrect={false}
               placeholder="e.g. 1001"
               placeholderTextColor={colors.textMuted}
-              secureTextEntry
+              returnKeyType="go"
+              onSubmitEditing={onLogin}
             />
 
             <TouchableOpacity
@@ -118,11 +146,16 @@ export default function LoginScreen() {
               )}
             </TouchableOpacity>
 
-            <Text style={styles.hint}>
-              Demo: <Text style={{ fontFamily: 'PlusJakartaSans_600SemiBold' }}>BRS / 1001</Text>
-            </Text>
+            <TouchableOpacity
+              testID="use-demo-button"
+              style={styles.demoBtn}
+              onPress={useDemo}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.demoBtnText}>Use demo credentials (BRS / 1001)</Text>
+            </TouchableOpacity>
           </View>
-        </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -130,8 +163,18 @@ export default function LoginScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background },
-  inner: { flex: 1, paddingHorizontal: spacing.lg, justifyContent: 'center' },
+  center: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.background,
+  },
+  inner: {
+    flexGrow: 1,
+    paddingHorizontal: spacing.lg,
+    justifyContent: 'center',
+    paddingVertical: spacing.xl,
+  },
   brandWrap: { alignItems: 'center', marginBottom: spacing.xl },
   brandIcon: {
     width: 64,
@@ -172,6 +215,19 @@ const styles = StyleSheet.create({
     marginTop: 4,
     marginBottom: spacing.lg,
   },
+  errorBox: {
+    backgroundColor: '#FEF2F2',
+    borderWidth: 1,
+    borderColor: '#FCA5A5',
+    borderRadius: radius.input,
+    padding: 12,
+    marginBottom: spacing.md,
+  },
+  errorText: {
+    color: colors.danger,
+    fontFamily: 'PlusJakartaSans_500Medium',
+    fontSize: 13,
+  },
   label: {
     fontFamily: 'PlusJakartaSans_600SemiBold',
     fontSize: 13,
@@ -202,11 +258,14 @@ const styles = StyleSheet.create({
     fontFamily: 'Outfit_600SemiBold',
     fontSize: 17,
   },
-  hint: {
+  demoBtn: {
     marginTop: spacing.md,
-    textAlign: 'center',
-    fontFamily: 'PlusJakartaSans_400Regular',
-    fontSize: 13,
-    color: colors.textMuted,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  demoBtnText: {
+    color: colors.primary,
+    fontFamily: 'PlusJakartaSans_600SemiBold',
+    fontSize: 14,
   },
 });

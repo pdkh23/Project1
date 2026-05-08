@@ -77,8 +77,14 @@ async def root():
 
 @api_router.post("/auth/login", response_model=LoginResponse)
 async def login(payload: LoginRequest):
+    uid = payload.user_id.strip()
+    code = payload.store_code.strip()
+    # Case-insensitive user_id match for forgiving login UX
     user = await db.users.find_one(
-        {"user_id": payload.user_id.strip(), "store_code": payload.store_code.strip()},
+        {
+            "user_id": {"$regex": f"^{uid}$", "$options": "i"},
+            "store_code": code,
+        },
         {"_id": 0},
     )
     if not user:

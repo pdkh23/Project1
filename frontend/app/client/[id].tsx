@@ -21,6 +21,7 @@ import {
   FileText,
   User as UserIcon,
 } from '../../src/icons';
+import { Feather } from '@expo/vector-icons';
 import { colors, radius, spacing, shadows } from '../../src/theme';
 import { api, Client } from '../../src/api';
 
@@ -58,7 +59,9 @@ export default function ClientDetail() {
       params: {
         id: client.id,
         name: client.name,
+        phone_number: client.phone_number || '',
         order_number: client.order_number,
+        provider: client.provider || '',
         installation_date: client.installation_date,
         order_details: client.order_details,
       },
@@ -124,7 +127,17 @@ export default function ClientDetail() {
 
         <View style={styles.detailCard}>
           <DetailRow Icon={UserIcon} label="Full Name" value={client.name} />
+          <DetailRow
+            IconNode={<Feather name="phone" size={18} color={colors.primary} />}
+            label="Phone Number"
+            value={client.phone_number || '—'}
+          />
           <DetailRow Icon={Hash} label="Order Number" value={client.order_number} />
+          <DetailRow
+            IconNode={<Feather name="wifi" size={18} color={colors.primary} />}
+            label="Provider"
+            value={client.provider || '—'}
+          />
           <DetailRow Icon={Calendar} label="Installation Date" value={client.installation_date} />
           <DetailRow
             Icon={FileText}
@@ -183,12 +196,14 @@ export default function ClientDetail() {
 
 function DetailRow({
   Icon,
+  IconNode,
   label,
   value,
   multiline,
   isLast,
 }: {
-  Icon: any;
+  Icon?: any;
+  IconNode?: React.ReactNode;
   label: string;
   value: string;
   multiline?: boolean;
@@ -197,7 +212,7 @@ function DetailRow({
   return (
     <View style={[styles.row, !isLast && styles.rowBorder]}>
       <View style={styles.rowIcon}>
-        <Icon color={colors.primary} size={18} />
+        {IconNode ? IconNode : Icon ? <Icon color={colors.primary} size={18} /> : null}
       </View>
       <View style={{ flex: 1 }}>
         <Text style={styles.rowLabel}>{label}</Text>

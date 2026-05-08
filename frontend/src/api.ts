@@ -11,7 +11,9 @@ export type Client = {
   id: string;
   owner_user_id: string;
   name: string;
+  phone_number?: string;
   order_number: string;
+  provider?: string;
   installation_date: string;
   order_details: string;
   created_at: string;

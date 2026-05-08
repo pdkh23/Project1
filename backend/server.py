@@ -53,7 +53,9 @@ class Client(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     owner_user_id: str
     name: str
+    phone_number: Optional[str] = ""
     order_number: str
+    provider: Optional[str] = ""  # "Virgin" | "Bell" | ""
     installation_date: str  # ISO date string YYYY-MM-DD
     order_details: str
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
@@ -63,14 +65,18 @@ class Client(BaseModel):
 class ClientCreate(BaseModel):
     owner_user_id: str
     name: str
+    phone_number: Optional[str] = ""
     order_number: str
+    provider: Optional[str] = ""
     installation_date: str
     order_details: str
 
 
 class ClientUpdate(BaseModel):
     name: Optional[str] = None
+    phone_number: Optional[str] = None
     order_number: Optional[str] = None
+    provider: Optional[str] = None
     installation_date: Optional[str] = None
     order_details: Optional[str] = None
 
@@ -146,6 +152,7 @@ async def list_clients(
             {"name": {"$regex": q, "$options": "i"}},
             {"order_number": {"$regex": q, "$options": "i"}},
             {"order_details": {"$regex": q, "$options": "i"}},
+            {"phone_number": {"$regex": q, "$options": "i"}},
         ]
     docs = await db.clients.find(query, {"_id": 0}).sort("created_at", -1).to_list(1000)
     return [Client(**d) for d in docs]

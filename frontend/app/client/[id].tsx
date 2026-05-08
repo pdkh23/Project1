@@ -7,6 +7,8 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
+  Modal,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
@@ -27,6 +29,7 @@ export default function ClientDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [client, setClient] = useState<Client | null>(null);
   const [loading, setLoading] = useState(true);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -64,25 +67,18 @@ export default function ClientDetail() {
 
   const onDelete = () => {
     if (!client) return;
-    Alert.alert(
-      'Delete entry',
-      `Delete ${client.name}? This cannot be undone.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await api.deleteClient(client.id);
-              router.back();
-            } catch (e: any) {
-              Alert.alert('Delete failed', e.message);
-            }
-          },
-        },
-      ]
-    );
+    setConfirmOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!client) return;
+    setConfirmOpen(false);
+    try {
+      await api.deleteClient(client.id);
+      router.back();
+    } catch (e: any) {
+      Alert.alert('Delete failed', e.message);
+    }
   };
 
   if (loading || !client) {
@@ -149,6 +145,38 @@ export default function ClientDetail() {
           <Text style={styles.editText}>Edit Entry</Text>
         </TouchableOpacity>
       </ScrollView>
+
+      <Modal
+        visible={confirmOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setConfirmOpen(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Delete entry</Text>
+            <Text style={styles.modalText}>
+              Delete {client.name}? This cannot be undone.
+            </Text>
+            <View style={styles.modalRow}>
+              <TouchableOpacity
+                testID="confirm-cancel"
+                style={[styles.modalBtn, styles.modalBtnGhost]}
+                onPress={() => setConfirmOpen(false)}
+              >
+                <Text style={styles.modalBtnGhostText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                testID="confirm-delete"
+                style={[styles.modalBtn, styles.modalBtnDanger]}
+                onPress={confirmDelete}
+              >
+                <Text style={styles.modalBtnDangerText}>Delete</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -289,5 +317,59 @@ const styles = StyleSheet.create({
     color: colors.textInverse,
     fontFamily: 'Outfit_600SemiBold',
     fontSize: 17,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(6,18,36,0.55)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: spacing.lg,
+  },
+  modalCard: {
+    width: '100%',
+    maxWidth: 380,
+    backgroundColor: colors.surface,
+    borderRadius: radius.card,
+    padding: spacing.lg,
+  },
+  modalTitle: {
+    fontFamily: 'Outfit_700Bold',
+    fontSize: 20,
+    color: colors.textMain,
+  },
+  modalText: {
+    fontFamily: 'PlusJakartaSans_400Regular',
+    fontSize: 14,
+    color: colors.textMuted,
+    marginTop: 6,
+    marginBottom: spacing.lg,
+    lineHeight: 20,
+  },
+  modalRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  modalBtn: {
+    flex: 1,
+    height: 50,
+    borderRadius: radius.button,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalBtnGhost: {
+    backgroundColor: '#F1F5F9',
+  },
+  modalBtnGhostText: {
+    fontFamily: 'Outfit_600SemiBold',
+    fontSize: 15,
+    color: colors.textMain,
+  },
+  modalBtnDanger: {
+    backgroundColor: colors.danger,
+  },
+  modalBtnDangerText: {
+    fontFamily: 'Outfit_600SemiBold',
+    fontSize: 15,
+    color: colors.textInverse,
   },
 });

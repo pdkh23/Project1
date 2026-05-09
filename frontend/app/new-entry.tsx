@@ -108,12 +108,17 @@ export default function NewEntryScreen() {
       return;
     }
     const installation_date = `${year}-${month}-${day}`;
-    // Sanity: validate date is real (e.g. Feb 30)
-    const dt = new Date(installation_date);
+    // Sanity: validate the date is real (e.g. Feb 30) using LOCAL time
+    // (avoids timezone off-by-one when parsing 'YYYY-MM-DD' as UTC)
+    const yNum = Number(year);
+    const mNum = Number(month);
+    const dNum = Number(day);
+    const dt = new Date(yNum, mNum - 1, dNum);
     if (
       Number.isNaN(dt.getTime()) ||
-      `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}` !==
-        installation_date
+      dt.getFullYear() !== yNum ||
+      dt.getMonth() + 1 !== mNum ||
+      dt.getDate() !== dNum
     ) {
       setError('That date is not valid. Please pick another.');
       return;

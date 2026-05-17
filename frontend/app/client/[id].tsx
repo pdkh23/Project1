@@ -7,7 +7,6 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
-  Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
@@ -158,13 +157,13 @@ export default function ClientDetail() {
         </TouchableOpacity>
       </ScrollView>
 
-      <Modal
-        visible={confirmOpen}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setConfirmOpen(false)}
-      >
+      {confirmOpen && (
         <View style={styles.modalOverlay}>
+          <TouchableOpacity
+            style={styles.modalBackdrop}
+            activeOpacity={1}
+            onPress={() => setConfirmOpen(false)}
+          />
           <View style={styles.modalCard}>
             <Text style={styles.modalTitle}>Delete entry</Text>
             <Text style={styles.modalText}>
@@ -188,7 +187,7 @@ export default function ClientDetail() {
             </View>
           </View>
         </View>
-      </Modal>
+      )}
     </SafeAreaView>
   );
 }
@@ -333,11 +332,15 @@ const styles = StyleSheet.create({
     fontSize: 17,
   },
   modalOverlay: {
-    flex: 1,
+    ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(6,18,36,0.55)',
     alignItems: 'center',
     justifyContent: 'center',
     padding: spacing.lg,
+    zIndex: 100,
+  },
+  modalBackdrop: {
+    ...StyleSheet.absoluteFillObject,
   },
   modalCard: {
     width: '100%',

@@ -7,10 +7,27 @@ import {
   PlusJakartaSans_500Medium,
   PlusJakartaSans_600SemiBold,
 } from '@expo-google-fonts/plus-jakarta-sans';
-import { View, ActivityIndicator } from 'react-native';
+import { View, ActivityIndicator, Platform } from 'react-native';
+import { useEffect } from 'react';
 import { colors } from '../src/theme';
 
 export default function RootLayout() {
+  useEffect(() => {
+    if (Platform.OS !== 'web') return;
+
+    const originalWarn = console.warn;
+    console.warn = (...args: any[]) => {
+      const message = String(args[0] ?? '');
+      if (message.includes('props.pointerEvents is deprecated')) return;
+      if (message.includes('Blocked aria-hidden on an element because its descendant retained focus')) return;
+      originalWarn(...args);
+    };
+
+    return () => {
+      console.warn = originalWarn;
+    };
+  }, []);
+
   const [loaded] = useFonts({
     Outfit_600SemiBold,
     Outfit_700Bold,
@@ -34,7 +51,7 @@ export default function RootLayout() {
         screenOptions={{
           headerShown: false,
           contentStyle: { backgroundColor: colors.background },
-          animation: 'slide_from_right',
+          animation: Platform.OS === 'web' ? 'none' : 'slide_from_right',
         }}
       />
     </SafeAreaProvider>

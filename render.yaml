@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: brs-reminder-api
+    runtime: docker
+    dockerfilePath: backend/Dockerfile
+    dockerContext: .
+    autoDeployTrigger: commit
+    healthCheckPath: /api/health
+    envVars:
+      - key: MONGO_URL
+        sync: false
+      - key: DB_NAME
+        value: brs_reminder

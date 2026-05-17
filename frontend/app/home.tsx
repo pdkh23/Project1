@@ -31,7 +31,7 @@ export default function HomeScreen() {
       const r = await api.getReminders(u.user_id);
       setReminders(r);
     } catch {}
-  }, []);
+  }, [router]);
 
   useFocusEffect(
     useCallback(() => {

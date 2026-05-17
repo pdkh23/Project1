@@ -84,7 +84,7 @@ export default function NewEntryScreen() {
   }>();
   const isEdit = Boolean(params.id);
 
-  const initial = useMemo(() => splitDate(params.installation_date), []);
+  const initial = useMemo(() => splitDate(params.installation_date), [params.installation_date]);
 
   const [name, setName] = useState(params.name || '');
   const [phone, setPhone] = useState(params.phone_number || '');

@@ -28,7 +28,7 @@ export default function RemindersScreen() {
       setItems(r);
     } catch {}
     setLoading(false);
-  }, []);
+  }, [router]);
 
   useFocusEffect(
     useCallback(() => {

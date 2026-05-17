@@ -2,14 +2,47 @@
 import os
 import uuid
 from datetime import datetime, timezone, timedelta
+from pathlib import Path
 
 import pytest
 import requests
 from dotenv import load_dotenv
 
-load_dotenv("/app/frontend/.env")
-BASE_URL = os.environ["EXPO_PUBLIC_BACKEND_URL"].rstrip("/")
-API = f"{BASE_URL}/api"
+# Resolve the frontend .env from repository layout for local and CI runs.
+REPO_ROOT = Path(__file__).resolve().parents[2]
+load_dotenv(REPO_ROOT / "frontend" / ".env")
+BASE_URL = (os.getenv("BRS_API_BASE_URL") or os.getenv("EXPO_PUBLIC_BACKEND_URL") or "").rstrip("/")
+
+
+def _is_backend_health_response(resp: requests.Response) -> bool:
+    if resp.status_code != 200:
+        return False
+    try:
+        data = resp.json()
+    except ValueError:
+        return False
+    return isinstance(data, dict) and data.get("ok") is True
+
+
+def _resolve_api_base(base_url: str) -> str | None:
+    """Support deployments that expose endpoints at `/api` or at root."""
+    if not base_url:
+        return None
+    for candidate in (f"{base_url}/api", base_url):
+        try:
+            r = requests.get(f"{candidate}/health", timeout=10)
+            if _is_backend_health_response(r):
+                return candidate
+        except requests.RequestException:
+            continue
+    return None
+
+
+API = _resolve_api_base(BASE_URL)
+pytestmark = pytest.mark.skipif(
+    not API,
+    reason="Backend API is not reachable. Set BRS_API_BASE_URL to a running backend URL.",
+)
 
 
 @pytest.fixture(scope="module")

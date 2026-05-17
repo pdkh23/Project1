@@ -88,7 +88,7 @@ export default function SignupScreen() {
           <View style={styles.intro}>
             <Text style={styles.title}>Set up your store</Text>
             <Text style={styles.subtitle}>
-              Pick a unique User ID and a Store Code you'll remember. You'll use these to sign in
+              Pick a unique User ID and a Store Code you&apos;ll remember. You&apos;ll use these to sign in
               later.
             </Text>
           </View>

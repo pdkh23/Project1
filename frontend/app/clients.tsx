@@ -33,12 +33,12 @@ export default function ClientsScreen() {
       setClients(data);
     } catch {}
     setLoading(false);
-  }, []);
+  }, [router]);
 
   useFocusEffect(
     useCallback(() => {
       load(q);
-    }, [load])
+    }, [load, q])
   );
 
   const onSearch = (text: string) => {

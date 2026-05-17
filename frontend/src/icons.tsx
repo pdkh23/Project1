@@ -8,9 +8,12 @@ type IconProps = {
   style?: any;
 };
 
-const make = (name: React.ComponentProps<typeof Feather>['name']) =>
-  ({ color, size = 22, style }: IconProps) =>
+const make = (name: React.ComponentProps<typeof Feather>['name']) => {
+  const Icon = ({ color, size = 22, style }: IconProps) =>
     <Feather name={name} size={size} color={color} style={style} />;
+  Icon.displayName = `FeatherIcon(${name})`;
+  return Icon;
+};
 
 export const Bell = make('bell');
 export const BellRing = make('bell');

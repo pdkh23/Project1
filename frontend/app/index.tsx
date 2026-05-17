@@ -36,7 +36,7 @@ export default function LoginScreen() {
       } catch {}
       setBootstrapping(false);
     })();
-  }, []);
+  }, [router]);
 
   const onLogin = async () => {
     setError(null);
@@ -156,7 +156,7 @@ export default function LoginScreen() {
             </TouchableOpacity>
 
             <View style={styles.footerRow}>
-              <Text style={styles.footerText}>Don't have an account? </Text>
+              <Text style={styles.footerText}>Don&apos;t have an account? </Text>
               <TouchableOpacity
                 testID="goto-signup"
                 onPress={() => router.push('/signup')}

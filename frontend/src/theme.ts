@@ -1,3 +1,5 @@
+import { Platform } from 'react-native';
+
 export const colors = {
   primary: '#0E3A60',
   primaryHover: '#0A2944',
@@ -29,11 +31,16 @@ export const spacing = {
 };
 
 export const shadows = {
-  card: {
-    shadowColor: '#0E3A60',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.06,
-    shadowRadius: 24,
-    elevation: 3,
-  },
+  card:
+    Platform.OS === 'web'
+      ? {
+          boxShadow: '0px 8px 24px rgba(14, 58, 96, 0.06)',
+        }
+      : {
+          shadowColor: '#0E3A60',
+          shadowOffset: { width: 0, height: 8 },
+          shadowOpacity: 0.06,
+          shadowRadius: 24,
+          elevation: 3,
+        },
 };

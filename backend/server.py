@@ -26,6 +26,20 @@ app = FastAPI()
 api_router = APIRouter(prefix="/api")
 
 
+@app.get("/")
+async def service_root():
+    return {
+        "message": "BRS Reminder API",
+        "health": "/api/health",
+        "docs": "/docs",
+    }
+
+
+@app.get("/health")
+async def service_health():
+    return {"ok": True, "scope": "service"}
+
+
 # ---------- Models ----------
 class User(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
